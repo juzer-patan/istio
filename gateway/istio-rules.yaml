@@ -1,0 +1,56 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: frontend-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+
+---
+
+kind: VirtualService
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: fleetman-webapp-vs
+  namespace: default
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - frontend-gateway
+  http:
+    - route:
+        - destination:
+            host: fleetman-webapp
+            subset: version-1
+          weight: 0
+        - destination:
+            host: fleetman-webapp
+            subset: version-2
+          weight: 100
+            
+
+---
+
+kind: DestinationRule
+apiVersion: networking.istio.io/v1alpha3
+metadata:
+  name: fleetman-webapp-dr
+  namespace: default
+spec:
+  host: fleetman-webapp
+  subsets:
+  - labels:
+      version: old
+    name: version-1
+  - labels:
+      version: experimental
+    name: version-2
+ 
